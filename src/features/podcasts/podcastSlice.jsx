@@ -1,7 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-    podcastList: []
+    podcastList: [],
+    selectedPodcast: []
 }
 
 export const podcastSlice = createSlice({
@@ -11,10 +12,18 @@ export const podcastSlice = createSlice({
         get:  (state, action) => {
 
             state.podcastList = action.payload
+        },
+        setPodcastsFromLocal: (state, action) => {
+            state.podcastList = action.payload;
+        },
+
+        setSelectedPodcast: (state,action) => {
+            state.selectedPodcast = action.payload;
         }
+
     }
 });
 
-export const { get } = podcastSlice.actions;
+export const { get, setPodcastsFromLocal, setSelectedPodcast } = podcastSlice.actions;
 export default podcastSlice.reducer
 

@@ -2,6 +2,10 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import './index.css'
 
 import { Home } from "./views/home";
+import { Navbar } from "./components/Navbar";
+import { SinglePodcast } from "./views/SinglePodcast";
+import { SingleEpisode } from "./views/SingleEpisode";
+
 
 export const Layout = () => {
 
@@ -9,9 +13,11 @@ export const Layout = () => {
 
     return (<>
         <BrowserRouter basename={basename}>
-        
+            <Navbar />
             <Routes>
                 <Route path='/' element={<Home/>} />
+                <Route path='/podcast/:podcastid' element={<SinglePodcast />} />
+                <Route path='/podcast/:podcastid/:episodeid' element={<SingleEpisode />} />
             </Routes>
         </BrowserRouter>
     </>)
