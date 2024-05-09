@@ -41,7 +41,7 @@ export const Home = () => {
                 <input className="px-5 py-2 rounded-xl" type="text"  name="filter" id="filter" placeholder="Filter Podcasts" onChange={e=> setFilterInput(e.target.value)} value={filterInput}/>
 
             </div>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-4 gap-4 text-center">
                 {filteredPodcastList.map((podcast,index) => {
                     return (<PodcastCard key={index} name={podcast['im:name'].label} author={podcast['im:artist'].label} image={podcast['im:image'][2].label} id={podcast.id.attributes['im:id']} />);
                 })}

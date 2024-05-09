@@ -18,6 +18,7 @@ export const Layout = () => {
                 <Route path='/' element={<Home/>} />
                 <Route path='/podcast/:podcastid' element={<SinglePodcast />} />
                 <Route path='/podcast/:podcastid/:episodeid' element={<SingleEpisode />} />
+                <Route path='*' element={<h1>Not Found</h1>} />
             </Routes>
         </BrowserRouter>
     </>)

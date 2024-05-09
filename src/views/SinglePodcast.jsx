@@ -1,36 +1,84 @@
-import { useEffect } from "react"
 import { useParams } from "react-router-dom"
-import { useSelector,useDispatch } from "react-redux"
-import { setSelectedPodcast } from "../features/podcasts/podcastSlice.jsx"
-import { toggleVisibility } from "../features/podcasts/loaderSlice.jsx"
-
-import { SideBar } from "../components/SideBar.jsx"
-
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { get,setSelectedPodcast,setSelectedPodcastEpisodes } from "../features/podcasts/podcastSlice";
+import { toggleVisibility } from "../features/podcasts/loaderSlice";
+import { SideBar } from "../components/SideBar";
 export const SinglePodcast = () => {
-    const { podcastid } = useParams();
 
-    const episodes = useSelector((state) => state.podcast.selectedPodcast);
-    const episodeInfoList = JSON.parse(localStorage.getItem('podcasts')).filter(episode => {return episode.id.attributes['im:id'] === podcastid});
-    const episodeInfo = episodeInfoList[0];
+    const {podcastid} = useParams();
     const dispatch = useDispatch();
+    const podcastList = useSelector((state) => state.podcast.podcastList);
+    const actualPodcast = useSelector((state) => state.podcast.selectedPodcast);
+    const episodesList = useSelector((state) => state.podcast.selectedPodcastEpisodes);
 
-    const getPodcast = async () => {
+    const setPodcastList = async () => {
 
-        const response =await fetch(`https://itunes.apple.com/lookup?id=${podcastid}&media=podcast&entity=podcastEpisode&limit=20`);
+        const cachedPodcastList = localStorage.getItem('podcasts')
+
+        if(cachedPodcastList && podcastList.length === 0){
+            dispatch(get(JSON.parse(cachedPodcastList)))
+            setActualPotcast(JSON.parse(cachedPodcastList));
+            return;
+        }
+
+        const response = await fetch('https://itunes.apple.com/us/rss/toppodcasts/limit=100/genre=1310/json',{
+            method:'GET'
+        });
         const data = await response.json();
-        dispatch(setSelectedPodcast(data.results));
-        dispatch(toggleVisibility());
+        localStorage.setItem('podcasts',JSON.stringify(data.feed.entry));
+        dispatch(get(data.feed.entry));
+        setActualPotcast(data.feed.entry);
+    }
 
+
+    const setActualPotcast = () => {
+
+        const podcastSelected = podcastList.filter((podcast) => {return podcast.id.attributes['im:id'] === podcastid});
+        dispatch(setSelectedPodcast(podcastSelected));
+
+    }
+    const setEpisodeList = async () => {
+        const cachedEpisodeList = localStorage.getItem(`podcast-${podcastid}-episodes`);
+        if(cachedEpisodeList)
+            {
+                dispatch(setSelectedPodcastEpisodes(JSON.parse(cachedEpisodeList)));
+                dispatch(toggleVisibility());
+                return;
+            }
+        const response = await fetch(`https://itunes.apple.com/lookup?id=${podcastid}&media=podcast&entity=podcastEpisode`,{
+            method:'GET'
+        });
+
+        const data = await response.json();
+        dispatch(setSelectedPodcastEpisodes(data.results));
+        localStorage.setItem(`podcast-${podcastid}-episodes`, JSON.stringify(data.results));
+        dispatch(toggleVisibility());
     }
 
     useEffect(()=>{
         dispatch(toggleVisibility());
-        getPodcast()
-    },[])
+        setPodcastList();
+        setActualPotcast();
+        setEpisodeList();
+
+    },[podcastList, dispatch]);
+
     return (<>
-        
-        <div className="h-full w-screen flex items-center justify-start text-white text-3xl">
-            <SideBar  name={episodeInfo['im:name'].label} author={episodeInfo['im:artist'].label} image={episodeInfo['im:image'][2].label} id={episodeInfo.id.attributes['im:id']}/>
+
+        <div className="w-screen h-full flex justify-start items-center">
+            <SideBar name={''} image='' author='' description=""  />
+
         </div>
+        {console.log('Podcast List:')}
+        {console.log(podcastList)}
+        {console.log('Actual Podcast:')}
+        {console.log(actualPodcast[0]['im:name'].label)}
+        
+        {console.log('Episodes List:')}
+        {console.log(episodesList)}
+
+
     </>)
+
 }
