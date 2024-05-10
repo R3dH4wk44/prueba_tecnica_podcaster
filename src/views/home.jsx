@@ -1,7 +1,7 @@
 import  { useEffect, useState } from "react";
 import { PodcastCard } from "../components/PodcastCard.jsx";
 import { useSelector, useDispatch } from "react-redux";
-import { get, setPodcastsFromLocal } from "../features/podcasts/podcastSlice";
+import { setPodcastList, setPodcastsFromLocal } from "../features/podcasts/podcastSlice";
 import { toggleVisibility } from "../features/podcasts/loaderSlice";
 export const Home = () => {
 
@@ -21,7 +21,7 @@ export const Home = () => {
         const data = await response.json();
         localStorage.setItem('podcasts',JSON.stringify(data.feed.entry));
         dispatch(toggleVisibility())
-        dispatch(get(data.feed.entry));
+        dispatch(setPodcastList(data.feed.entry));
 
     }
     useEffect(()=>{

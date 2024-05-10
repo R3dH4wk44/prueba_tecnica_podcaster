@@ -1,84 +1,87 @@
-import { useParams } from "react-router-dom"
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
-import { get,setSelectedPodcast,setSelectedPodcastEpisodes } from "../features/podcasts/podcastSlice";
+import { useParams } from "react-router-dom"
+import { setPodcastList, setSelectedPodcastEpisodes } from "../features/podcasts/podcastSlice";
 import { toggleVisibility } from "../features/podcasts/loaderSlice";
 import { SideBar } from "../components/SideBar";
 export const SinglePodcast = () => {
-
+    const dispatch = useDispatch()
     const {podcastid} = useParams();
-    const dispatch = useDispatch();
     const podcastList = useSelector((state) => state.podcast.podcastList);
-    const actualPodcast = useSelector((state) => state.podcast.selectedPodcast);
-    const episodesList = useSelector((state) => state.podcast.selectedPodcastEpisodes);
+    const ActualPodcastEpisodes = useSelector((state) => state.podcast.selectedPodcastEpisodes);
+    const [actualPodcast,setActualPodcast] = useState(null);
 
-    const setPodcastList = async () => {
 
-        const cachedPodcastList = localStorage.getItem('podcasts')
+    const setPodcasts = async () => {
 
-        if(cachedPodcastList && podcastList.length === 0){
-            dispatch(get(JSON.parse(cachedPodcastList)))
-            setActualPotcast(JSON.parse(cachedPodcastList));
+        const cachedData = localStorage.getItem('podcasts');
+
+        if(cachedData && podcastList.length === 0){
+
+            dispatch(setPodcastList(JSON.parse(cachedData)));
+            return JSON.parse(cachedData);
+        }
+
+        if(podcastList.length === 0){
+            const response = await fetch('https://itunes.apple.com/us/rss/toppodcasts/limit=100/genre=1310/json',{
+                method:'GET'
+            });
+            const data = await response.json();
+            dispatch(setPodcastList(data.feed.entry));
+            localStorage.setItem('podcasts',JSON.stringify(data.feed.entry));
+            return data.feed.entry;
+        }
+        return podcastList;
+    }
+
+
+    const setActualPodcastEpisodes = async () => {
+        const cachedData = localStorage.getItem(`podcast-${podcastid}`);
+
+        if(cachedData){
+            dispatch(setSelectedPodcastEpisodes(JSON.parse(cachedData)));
+            dispatch(toggleVisibility());
             return;
         }
 
-        const response = await fetch('https://itunes.apple.com/us/rss/toppodcasts/limit=100/genre=1310/json',{
+        const response = await fetch(`https://itunes.apple.com/lookup?id=${podcastid}&media=podcast&entity=podcastEpisode&limit=50`,{
             method:'GET'
         });
         const data = await response.json();
-        localStorage.setItem('podcasts',JSON.stringify(data.feed.entry));
-        dispatch(get(data.feed.entry));
-        setActualPotcast(data.feed.entry);
-    }
-
-
-    const setActualPotcast = () => {
-
-        const podcastSelected = podcastList.filter((podcast) => {return podcast.id.attributes['im:id'] === podcastid});
-        dispatch(setSelectedPodcast(podcastSelected));
-
-    }
-    const setEpisodeList = async () => {
-        const cachedEpisodeList = localStorage.getItem(`podcast-${podcastid}-episodes`);
-        if(cachedEpisodeList)
-            {
-                dispatch(setSelectedPodcastEpisodes(JSON.parse(cachedEpisodeList)));
-                dispatch(toggleVisibility());
-                return;
-            }
-        const response = await fetch(`https://itunes.apple.com/lookup?id=${podcastid}&media=podcast&entity=podcastEpisode`,{
-            method:'GET'
-        });
-
-        const data = await response.json();
-        dispatch(setSelectedPodcastEpisodes(data.results));
-        localStorage.setItem(`podcast-${podcastid}-episodes`, JSON.stringify(data.results));
+        localStorage.setItem(`podcast-${podcastid}`, JSON.stringify(data));
+        dispatch(setActualPodcastEpisodes(data));
         dispatch(toggleVisibility());
+        return;
     }
 
-    useEffect(()=>{
-        dispatch(toggleVisibility());
-        setPodcastList();
-        setActualPotcast();
-        setEpisodeList();
+    useEffect(() => {
+        const initialize = async () => {
+            dispatch(toggleVisibility())
+            const podcasts = await setPodcasts();
+            const podcast = podcasts.find((podcast) => podcast.id.attributes['im:id'] === podcastid);
+            setActualPodcast(podcast);
+            setActualPodcastEpisodes();
+        }
+        initialize();
+    },[podcastid]);
 
-    },[podcastList, dispatch]);
+    if(!actualPodcast){
+        return (<></>);
+    }
 
     return (<>
 
-        <div className="w-screen h-full flex justify-start items-center">
-            <SideBar name={''} image='' author='' description=""  />
-
+        <div className="w-screen h-screen flex justify-start items-center">
+            <SideBar name={actualPodcast['im:name'].label} author={actualPodcast['im:artist'].label} image={actualPodcast['im:image'][2].label} description={actualPodcast.summary.label} />
+            <div className="w-full h-full flex flex-col justify-start items-center">
+                {ActualPodcastEpisodes.resultCount}
+                <div className="grid grid-cols-3">
+                    <div>Title</div>
+                    <div>Date</div>
+                    <div>Duration</div>
+                </div>
+            </div>
         </div>
-        {console.log('Podcast List:')}
-        {console.log(podcastList)}
-        {console.log('Actual Podcast:')}
-        {console.log(actualPodcast[0]['im:name'].label)}
-        
-        {console.log('Episodes List:')}
-        {console.log(episodesList)}
-
 
     </>)
-
 }
