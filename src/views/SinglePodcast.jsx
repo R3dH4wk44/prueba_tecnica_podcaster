@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom"
+import { useParams, Link } from "react-router-dom"
 import { setPodcastList, setSelectedPodcastEpisodes } from "../features/podcasts/podcastSlice";
 import { toggleVisibility } from "../features/podcasts/loaderSlice";
 import { SideBar } from "../components/SideBar";
@@ -10,7 +10,7 @@ export const SinglePodcast = () => {
     const podcastList = useSelector((state) => state.podcast.podcastList);
     const ActualPodcastEpisodes = useSelector((state) => state.podcast.selectedPodcastEpisodes);
     const [actualPodcast,setActualPodcast] = useState(null);
-
+    const [podcastEpisodes, setPodcastEpisodes] = useState(null)
 
     const setPodcasts = async () => {
 
@@ -36,22 +36,26 @@ export const SinglePodcast = () => {
 
 
     const setActualPodcastEpisodes = async () => {
+
         const cachedData = localStorage.getItem(`podcast-${podcastid}`);
+
 
         if(cachedData){
             dispatch(setSelectedPodcastEpisodes(JSON.parse(cachedData)));
+            setPodcastEpisodes(JSON.parse(cachedData))
             dispatch(toggleVisibility());
-            return;
+            return JSON.parse(cachedData);
         }
 
-        const response = await fetch(`https://itunes.apple.com/lookup?id=${podcastid}&media=podcast&entity=podcastEpisode&limit=50`,{
+        const response = await fetch(`https://itunes.apple.com/lookup?id=${podcastid}&media=podcast&entity=podcastEpisode&limit=20`,{
             method:'GET'
         });
         const data = await response.json();
         localStorage.setItem(`podcast-${podcastid}`, JSON.stringify(data));
         dispatch(setActualPodcastEpisodes(data));
+        
         dispatch(toggleVisibility());
-        return;
+        return data;
     }
 
     useEffect(() => {
@@ -60,12 +64,27 @@ export const SinglePodcast = () => {
             const podcasts = await setPodcasts();
             const podcast = podcasts.find((podcast) => podcast.id.attributes['im:id'] === podcastid);
             setActualPodcast(podcast);
-            setActualPodcastEpisodes();
+            const actualEpisodes = await setActualPodcastEpisodes();
+            setPodcastEpisodes(actualEpisodes);
         }
         initialize();
-    },[podcastid]);
+    },[podcastid,podcastEpisodes]);
 
-    if(!actualPodcast){
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-GB');
+    }
+
+    function parseMilliseconds(milliseconds) {
+        const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+        const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
+      
+        const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+        return formattedTime;
+      }
+    if(!actualPodcast || !podcastEpisodes){
         return (<></>);
     }
 
@@ -73,13 +92,39 @@ export const SinglePodcast = () => {
 
         <div className="w-screen h-screen flex justify-start items-center">
             <SideBar name={actualPodcast['im:name'].label} author={actualPodcast['im:artist'].label} image={actualPodcast['im:image'][2].label} description={actualPodcast.summary.label} />
-            <div className="w-full h-full flex flex-col justify-start items-center">
-                {ActualPodcastEpisodes.resultCount}
-                <div className="grid grid-cols-3">
-                    <div>Title</div>
-                    <div>Date</div>
-                    <div>Duration</div>
-                </div>
+            <div className="w-full h-full p-5 flex flex-col justify-start items-center">
+                <h4 className="text-2xl p-5">Episodes: {ActualPodcastEpisodes.resultCount}</h4>
+                <table className=" w-full px-5 divide-y divide-slate-700">
+                    <thead>
+                        <th className="px-6 py-3 text-left text-lg tracking-wider">
+                            Title
+                        </th>
+                        <th className="px-6 py-3 text-left text-lg tracking-wider">
+                            Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-lg tracking-wider">
+                            Duration
+                        </th>
+                    </thead>
+                    {podcastEpisodes.results.map((row,index) =>{
+                        return(<>
+                            <tr key={index}>
+                                <td className="px-6py-4 whitespace-nowrap">
+                                    <Link to={`/podcast/${podcastid}/${row.trackId}`}>
+                                        {row.trackName}
+                                    </Link>
+                                    
+                                </td>
+                                <td className="px-6py-4 whitespace-nowrap">
+                                    {formatDate(row.releaseDate)}
+                                </td>
+                                <td className="px-6py-4 whitespace-nowrap">
+                                    {parseMilliseconds(row.trackTimeMillis)}
+                                </td>
+                            </tr>
+                        </>)
+                    })}
+                </table>
             </div>
         </div>
 

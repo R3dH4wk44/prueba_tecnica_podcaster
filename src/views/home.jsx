@@ -37,7 +37,7 @@ export const Home = () => {
     return (<>
         <div className="w-screen h-full px-5">
             <div className="input flex justify-end items-center gap-2 py-5">
-                <p className=" px-5 py-2 text-white font-xl font-extrabold bg-blue-800 rounded-xl">{filteredPodcastList.length}</p>
+                <p className=" px-5 py-2 font-xl font-extrabold bg-blue-800 rounded-xl">{filteredPodcastList.length}</p>
                 <input className="px-5 py-2 rounded-xl" type="text"  name="filter" id="filter" placeholder="Filter Podcasts" onChange={e=> setFilterInput(e.target.value)} value={filterInput}/>
 
             </div>
