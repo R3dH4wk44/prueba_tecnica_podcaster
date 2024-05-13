@@ -3,7 +3,8 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
     podcastList: [],
     selectedPodcast: [],
-    selectedPodcastEpisodes: []
+    selectedPodcastEpisodes: [],
+    selecedEpisodeInfo: {}
 }
 
 export const podcastSlice = createSlice({
@@ -22,12 +23,17 @@ export const podcastSlice = createSlice({
             state.selectedPodcast = action.payload;
         },
         setSelectedPodcastEpisodes: (state,action) => {
+
             state.selectedPodcastEpisodes = action.payload;
+        },
+        setSelectedEpisodeInfo: (state,action) => {
+
+            state.selecedEpisodeInfo = action.payload;
         }
 
     }
 });
 
-export const { setPodcastList, setPodcastsFromLocal, setSelectedPodcast, setSelectedPodcastEpisodes } = podcastSlice.actions;
+export const { setPodcastList, setPodcastsFromLocal, setSelectedPodcast, setSelectedPodcastEpisodes, setSelectedEpisodeInfo } = podcastSlice.actions;
 export default podcastSlice.reducer
 

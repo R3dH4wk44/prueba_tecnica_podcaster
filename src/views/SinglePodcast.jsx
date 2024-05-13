@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom"
-import { setPodcastList, setSelectedPodcastEpisodes } from "../features/podcasts/podcastSlice";
+import { setPodcastList } from "../features/podcasts/podcastSlice";
 import { toggleVisibility } from "../features/podcasts/loaderSlice";
 import { SideBar } from "../components/SideBar";
 export const SinglePodcast = () => {
+
     const dispatch = useDispatch()
     const {podcastid} = useParams();
     const podcastList = useSelector((state) => state.podcast.podcastList);
@@ -22,10 +23,12 @@ export const SinglePodcast = () => {
             return JSON.parse(cachedData);
         }
 
-        if(podcastList.length === 0){
-            const response = await fetch('https://itunes.apple.com/us/rss/toppodcasts/limit=100/genre=1310/json',{
+        if(podcastList.length === 0 && !cachedData){
+
+            const response = await fetch(`https://itunes.apple.com/us/rss/toppodcasts/limit=100/genre=1310/json`,{
                 method:'GET'
-            });
+            })
+            
             const data = await response.json();
             dispatch(setPodcastList(data.feed.entry));
             localStorage.setItem('podcasts',JSON.stringify(data.feed.entry));
@@ -41,15 +44,14 @@ export const SinglePodcast = () => {
 
 
         if(cachedData){
-            dispatch(setSelectedPodcastEpisodes(JSON.parse(cachedData)));
+            
             setPodcastEpisodes(JSON.parse(cachedData))
             dispatch(toggleVisibility());
             return JSON.parse(cachedData);
         }
-
         const response = await fetch(`https://itunes.apple.com/lookup?id=${podcastid}&media=podcast&entity=podcastEpisode&limit=20`,{
             method:'GET'
-        });
+        })
         const data = await response.json();
         localStorage.setItem(`podcast-${podcastid}`, JSON.stringify(data));
         dispatch(setActualPodcastEpisodes(data));
@@ -96,34 +98,38 @@ export const SinglePodcast = () => {
                 <h4 className="text-2xl p-5">Episodes: {ActualPodcastEpisodes.resultCount}</h4>
                 <table className=" w-full px-5 divide-y divide-slate-700">
                     <thead>
-                        <th className="px-6 py-3 text-left text-lg tracking-wider">
-                            Title
-                        </th>
-                        <th className="px-6 py-3 text-left text-lg tracking-wider">
-                            Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-lg tracking-wider">
-                            Duration
-                        </th>
+                        <tr>
+                            <th className="px-6 py-3 text-left text-lg tracking-wider">
+                                Title
+                            </th>
+                            <th className="px-6 py-3 text-left text-lg tracking-wider">
+                                Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-lg tracking-wider">
+                                Duration
+                            </th>
+                        </tr>
                     </thead>
+                    <tbody>
                     {podcastEpisodes.results.map((row,index) =>{
-                        return(<>
+                        return(
                             <tr key={index}>
-                                <td className="px-6py-4 whitespace-nowrap">
-                                    <Link to={`/podcast/${podcastid}/${row.trackId}`}>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <Link to={`/podcast/${podcastid}/episode/${row.trackId}`}>
                                         {row.trackName}
                                     </Link>
                                     
                                 </td>
-                                <td className="px-6py-4 whitespace-nowrap">
+                                <td className="px-6 py-4 whitespace-nowrap">
                                     {formatDate(row.releaseDate)}
                                 </td>
-                                <td className="px-6py-4 whitespace-nowrap">
+                                <td className="px-6 py-4 whitespace-nowrap">
                                     {parseMilliseconds(row.trackTimeMillis)}
                                 </td>
                             </tr>
-                        </>)
+                        )
                     })}
+                    </tbody>
                 </table>
             </div>
         </div>
