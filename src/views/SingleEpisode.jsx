@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import { setSelectedEpisodeInfo,setPodcastList } from "../features/podcasts/podcastSlice";
+import { setPodcastList } from "../features/podcasts/podcastSlice";
 import { useEffect, useState } from "react";
 import { toggleVisibility } from "../features/podcasts/loaderSlice";
 import { SideBar } from "../components/SideBar";
@@ -89,8 +89,13 @@ export const SingleEpisode = () => {
     <div className="w-screen h-screen flex justify-start items-center">
             <SideBar name={actualPodcast['im:name'].label} author={actualPodcast['im:artist'].label} image={actualPodcast['im:image'][2].label} description={actualPodcast.summary.label} podcastid={podcastid} link={true} />
             <div className="w-full h-full flex justify-center items-center">
-                <div>
-                    {episode.trackName}
+                <div className="w-2/3  bg-slate-900 p-5 rounded-xl">
+                    <h2 className=' text-2xl mb-5'>{episode.trackName}</h2>
+                    <p className='mb-5'>{episode.description}</p>
+                    <audio controls>
+                     <source src={episode.episodeUrl} type="audio/mp3"></source>
+                        Your browser does not support the audio element.
+                    </audio>
                     {console.log(episode)}
                 </div>
             </div>
