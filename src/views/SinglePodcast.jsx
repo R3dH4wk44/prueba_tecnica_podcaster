@@ -25,7 +25,7 @@ export const SinglePodcast = () => {
 
         if(podcastList.length === 0 && !cachedData){
 
-            const response = await fetch(`https://itunes.apple.com/us/rss/toppodcasts/limit=100/genre=1310/json`,{
+            const response = await fetch(`https://api.allorigins.win/raw?url=https://itunes.apple.com/us/rss/toppodcasts/limit=100/genre=1310/json`,{
                 method:'GET'
             })
             
@@ -49,10 +49,11 @@ export const SinglePodcast = () => {
             dispatch(toggleVisibility());
             return JSON.parse(cachedData);
         }
-        const response = await fetch(`https://itunes.apple.com/lookup?id=${podcastid}&media=podcast&entity=podcastEpisode&limit=20`,{
+        const response = await fetch(`https://api.allorigins.win/get?url=https://itunes.apple.com/lookup?id=${podcastid}&media=podcast&entity=podcastEpisode`,{
             method:'GET'
         })
-        const data = await response.json();
+        const dataResponse = await response.json();
+        const data = JSON.parse(dataResponse.contents)
         localStorage.setItem(`podcast-${podcastid}`, JSON.stringify(data));
         dispatch(setActualPodcastEpisodes(data));
         
@@ -70,7 +71,7 @@ export const SinglePodcast = () => {
             setPodcastEpisodes(actualEpisodes);
         }
         initialize();
-    },[podcastid,podcastEpisodes]);
+    },[]);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);

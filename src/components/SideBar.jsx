@@ -1,9 +1,9 @@
 import PropTypes from "prop-types";
 import { Link, useParams } from "react-router-dom";
 
-export const SideBar = ({ name, author, image, description, link, podcastid }) => {
+export const SideBar = ({ name, author, image, description, link }) => {
    
-
+    const {podcastid} = useParams();
     return (<>
         <div className="w-1/4 h-full text-center text-white bg-slate-900 flex flex-col justify-center items-center px-5 py-2 gap-5">
             {link ? (

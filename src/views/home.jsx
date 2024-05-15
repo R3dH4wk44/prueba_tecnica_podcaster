@@ -15,7 +15,7 @@ export const Home = () => {
         dispatch(toggleVisibility())
         return;
       }
-        const response = await fetch('https://itunes.apple.com/us/rss/toppodcasts/limit=100/genre=1310/json',{
+        const response = await fetch('https://api.allorigins.win/raw?url=https://itunes.apple.com/us/rss/toppodcasts/limit=100/genre=1310/json',{
             method:'GET'
         });
         const data = await response.json();

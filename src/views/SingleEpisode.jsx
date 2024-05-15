@@ -24,7 +24,7 @@ export const SingleEpisode = () => {
         }
 
         if(podcastList.length === 0 && !cachedData){
-            const response = await fetch('https://itunes.apple.com/us/rss/toppodcasts/limit=100/genre=1310/json',{
+            const response = await fetch('https://api.allorigins.win/get?url=https://itunes.apple.com/us/rss/toppodcasts/limit=100/genre=1310/json',{
                 method:'GET'
             });
             const data = await response.json();
@@ -52,16 +52,15 @@ export const SingleEpisode = () => {
             setEpisode(episode)
             return;
         }
-        const response = await fetch(`https://itunes.apple.com/lookup?id=${podcastid}&media=podcast&entity=podcastEpisode&limit=20`,{
+        const response = await fetch(`https://api.allorigins.win/raw?url=https://itunes.apple.com/lookup?id=${podcastid}&media=podcast&entity=podcastEpisode&limit=20`,{
             method:'GET'
         });
         
         const data = await response.json();
-        console.log(data.results);
-        console.log(episodeid)
+        
         const selectedEpisode = await data.results.find(episode => episode.trackId == episodeid);
         console.log(selectedEpisode);
-        localStorage.setItem(`podcast-${podcastid}`, JSON.stringify(data));
+        localStorage.setItem(`podcast-${podcastid}`, JSON.stringify(data.contents));
         localStorage.setItem(`podcast-${podcastid}-${episodeid}`, JSON.stringify(selectedEpisode));
         setEpisode(selectedEpisode);
     }
